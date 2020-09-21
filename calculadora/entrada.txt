@@ -1,0 +1,11 @@
+aa
+a = b++c
+b = dd
+a = 9n
+c = n8n+
+a = b + c;
+7;+0;
+a = 1;
+b = 2;
+c = 3;
+d = a + b * c + d
