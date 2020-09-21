@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Calculadora {
-    double[] variaveis = new double[25];
+    int[] variaveis = new int[25];
 
     boolean verificaSeCacacterPertenceAoAlfabeto(char c, int indiceDaLinha) {
         if ((Character.isLetter(c) && Character.isLowerCase(c)) || Character.isDigit(c) || c == '=' || c == '*'
@@ -120,8 +120,60 @@ public class Calculadora {
 
     }
 
-    void processaLinha(ArrayList<String> linha) {
+    void processaLinha(ArrayList<String> linhaQuebrada, int indiceDaLinha) {
+        int posicao = 0;
+        boolean ehPrint = true;
+        boolean ehDefinicaoDeVariavel = false;
+        if (linhaQuebrada != null && !linhaQuebrada.isEmpty()) {
+            String s = String.valueOf(linhaQuebrada.get(0).charAt(0));
+            if (s.equals("+") || s.equals("*") || linhaQuebrada.get(0).equals("=")) {
+                System.out.printf("Erro ao processar linha %d: operador %s logo no inicio da expressao\n",
+                        indiceDaLinha, linhaQuebrada.get(0));
+            }
+            char s1 = s.charAt(0);
+            char s2 = ' ';
+            if (linhaQuebrada.size() > 1) {
+                s2 = s.charAt(1);
+            }
+            if (linhaQuebrada.size() > 1 && (Character.isLetter(s1) && Character.isLowerCase(s1))) {
+                if (s2 != '=') {
+                    ehPrint = true;
+                } else {
+                    ehDefinicaoDeVariavel = true;
+                }
 
+            }
+        }
+        int variavel;
+        int i = 0;
+        int result = 0;
+        for (i = 0; i < linhaQuebrada.size(); i++) {
+            char c = linhaQuebrada.get(i).charAt(0);
+            int aux1 = 0;
+            int aux2 = 0;
+            if (c == '*') {
+                String a = linhaQuebrada.get(i - 1);
+                String b = linhaQuebrada.get(i + 1);
+                if (Character.isLetter(a.charAt(0)) && Character.isLowerCase(a.charAt(0))) {
+                    aux1 = variaveis[(int) a.charAt(0) - 97];
+                } else {
+                    aux1 = Integer.parseInt(a);
+                }
+                if (Character.isLetter(b.charAt(0)) && Character.isLowerCase(b.charAt(0))) {
+                    aux2 = variaveis[(int) b.charAt(0) - 97];
+                } else {
+                    aux2 = Integer.parseInt(a);
+                }
+                result = aux1 * aux2;
+                aux1 = aux1 * aux2;
+            }
+            if (c == '+') {
+                
+            }
+            if (c == '=') {
+
+            }
+        }
     }
 
     public static void main(String[] args) {
@@ -134,7 +186,8 @@ public class Calculadora {
             reader = new BufferedReader(new FileReader("entrada.txt"));
             String linha = reader.readLine();
             while (linha != null) {
-                calculadora.quebraLinha(linha, indiceDaLinha);
+                ArrayList<String> linhaQuebrada = calculadora.quebraLinha(linha, indiceDaLinha);
+                calculadora.processaLinha(linhaQuebrada, indiceDaLinha);
                 // read next line
                 linha = reader.readLine();
                 indiceDaLinha++;
