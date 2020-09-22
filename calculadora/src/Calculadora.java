@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Calculadora {
-    int[] variaveis = new int[25];
+    int[] variaveis = new int[26];
 
     boolean verificaSeCacacterPertenceAoAlfabeto(char c, int indiceDaLinha) {
         if ((Character.isLetter(c) && Character.isLowerCase(c)) || Character.isDigit(c) || c == '=' || c == '*'
