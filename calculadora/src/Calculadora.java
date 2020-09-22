@@ -12,7 +12,7 @@ public class Calculadora {
                 || c == '+' || c == ';') {
             return true;
         } else {
-            System.out.printf("Erro na linha %d: caracter invalido %c\n", indiceDaLinha, c);
+            System.out.printf("\nErro na linha %d: caracter invalido %c\n", indiceDaLinha, c);
             return false;
         }
     }
@@ -24,7 +24,7 @@ public class Calculadora {
         boolean foiDigito = false;
         boolean foiLetra = false;
         boolean foiOperador = false;
-        boolean erroAoProcessar = false;
+        boolean erroAoQuebrarLinha = false;
         while (i < linha.length()) {
             char c = linha.charAt(i);
             if (c != ' ' && verificaSeCacacterPertenceAoAlfabeto(c, indiceDaLinha)) {
@@ -37,9 +37,10 @@ public class Calculadora {
                     if (!objetos.isEmpty()) {
                         if (foiOperador) {
                             System.out.printf(
-                                    "Erro ao processar linha %d: sintaxe invalida, esperado digito ou variavel após %s\n",
+                                    "\nErro ao processar linha %d: sintaxe invalida, esperado digito ou variavel após %s\n",
                                     indiceDaLinha, objetos.get(objetos.size() - 1));
-                            erroAoProcessar = true;
+                            erroAoQuebrarLinha = true;
+                            i = linha.length();
                         }
                         if (foiDigito || foiLetra) {
                             objetos.add(String.valueOf(linha.charAt(i)));
@@ -51,15 +52,17 @@ public class Calculadora {
                 if (ehLetra) {
                     if (!objetos.isEmpty()) {
                         if (foiLetra) {
-                            System.out.printf("Erro ao processar linha %d: nome de variavel invalido %s\n",
+                            System.out.printf("\nErro ao processar linha %d: nome de variavel invalido %s\n",
                                     indiceDaLinha, objetos.get(objetos.size() - 1) + String.valueOf(c));
-                            erroAoProcessar = true;
+                            erroAoQuebrarLinha = true;
+                            i = linha.length();
                         }
                         if (foiDigito) {
                             System.out.printf(
-                                    "Erro ao processar linha %d: sintaxe invalida, esperado operador ou digito após %s\n",
+                                    "\nErro ao processar linha %d: sintaxe invalida, esperado operador ou digito após %s\n",
                                     indiceDaLinha, objetos.get(objetos.size() - 1));
-                            erroAoProcessar = true;
+                            erroAoQuebrarLinha = true;
+                            i = linha.length();
                         }
                         if (foiOperador) {
                             objetos.add(String.valueOf(linha.charAt(i)));
@@ -72,9 +75,10 @@ public class Calculadora {
                     if (!objetos.isEmpty()) {
                         if (foiLetra) {
                             System.out.printf(
-                                    "Erro ao processar linha %d: sintaxe invalida, esperado operador após %s\n",
+                                    "\nErro ao processar linha %d: sintaxe invalida, esperado operador após %s\n",
                                     indiceDaLinha, objetos.get(objetos.size() - 1));
-                            erroAoProcessar = true;
+                            erroAoQuebrarLinha = true;
+                            i = linha.length();
                         } else {
                             String number = "";
                             while (Character.isDigit(c) && (i < linha.length())) {
@@ -92,14 +96,16 @@ public class Calculadora {
                     }
                 }
                 if (ehPontEVirgula && i != linha.length() - 1) {
-                    System.out.printf("Erro ao processar linha %d: ponto e virgula (;) no meio de expressão\n",
+                    System.out.printf("\nErro ao processar linha %d: ponto e virgula (;) no meio de expressão\n",
                             indiceDaLinha);
-                    erroAoProcessar = true;
+                    erroAoQuebrarLinha = true;
+                    i = linha.length();
                 }
                 if (!ehPontEVirgula && i == linha.length() - 1) {
-                    System.out.printf("Erro ao processar linha %d: esperado ponto e virgula (;) no final da linha\n",
+                    System.out.printf("\nErro ao processar linha %d: esperado ponto e virgula (;) no final da linha\n",
                             indiceDaLinha);
-                    erroAoProcessar = true;
+                    erroAoQuebrarLinha = true;
+                    i = linha.length();
                 }
                 foiDigito = ehDigito;
                 foiLetra = ehLetra;
@@ -108,11 +114,7 @@ public class Calculadora {
             i++;
         }
 
-        /*
-         * for (i = 0; i < objetos.size(); i++) { System.out.printf("%s",
-         * objetos.get(i)); } System.out.printf("\n");
-         */
-        if (!erroAoProcessar) {
+        if (!erroAoQuebrarLinha) {
             return objetos;
         } else {
             return null;
@@ -121,65 +123,168 @@ public class Calculadora {
     }
 
     void processaLinha(ArrayList<String> linhaQuebrada, int indiceDaLinha) {
-        int posicao = 0;
-        boolean ehPrint = true;
-        boolean ehDefinicaoDeVariavel = false;
         if (linhaQuebrada != null && !linhaQuebrada.isEmpty()) {
-            String s = String.valueOf(linhaQuebrada.get(0).charAt(0));
-            if (s.equals("+") || s.equals("*") || linhaQuebrada.get(0).equals("=")) {
-                System.out.printf("Erro ao processar linha %d: operador %s logo no inicio da expressao\n",
-                        indiceDaLinha, linhaQuebrada.get(0));
+            String linha = "";
+            int j;
+            for (j = 0; j < linhaQuebrada.size(); j++) {
+                linha = linha + "[" + linhaQuebrada.get(j) + "]";
             }
-            char s1 = s.charAt(0);
-            char s2 = ' ';
-            if (linhaQuebrada.size() > 1) {
-                s2 = s.charAt(1);
+            linha = linha + "\n";
+            System.out.printf("\nProcessando linha %d: %s", indiceDaLinha, linha);
+            ArrayList<Integer> posicoesOperadorMultiplicacao = new ArrayList<Integer>();
+            ArrayList<Integer> posicoesOperadorAdicao = new ArrayList<Integer>();
+            ArrayList<Integer> posicoesOperadorAtribuicao = new ArrayList<Integer>();
+
+            int i;
+            for (i = 0; i < linhaQuebrada.size(); i++) {
+                String s = linhaQuebrada.get(i);
+                if (s.equals("*")) {
+                    posicoesOperadorMultiplicacao.add(i);
+                }
+                if (s.equals("+")) {
+                    posicoesOperadorAdicao.add(i);
+                }
+                if (s.equals("=")) {
+                    posicoesOperadorAtribuicao.add(i);
+                }
             }
-            if (linhaQuebrada.size() > 1 && (Character.isLetter(s1) && Character.isLowerCase(s1))) {
-                if (s2 != '=') {
-                    ehPrint = true;
-                } else {
-                    ehDefinicaoDeVariavel = true;
+
+            boolean ehAtribuicao = false;
+            boolean erroAoProcessarLinha = false;
+            if (posicoesOperadorAtribuicao.size() > 1
+                    || (posicoesOperadorAtribuicao.size() == 1 && posicoesOperadorAtribuicao.get(0) != 1)) {
+                System.out.printf(
+                        "\nErro ao processar linha %d: operador de atribuicao = em posicao invalida na expressao\n",
+                        indiceDaLinha);
+                erroAoProcessarLinha = true;
+            }
+            if (posicoesOperadorAtribuicao.size() == 1 && posicoesOperadorAtribuicao.get(0) == 1) {
+                ehAtribuicao = true;
+            }
+            if (ehAtribuicao && !(Character.isLetter(linhaQuebrada.get(0).charAt(0))
+                    && Character.isLowerCase(linhaQuebrada.get(0).charAt(0)))) {
+                System.out.printf(
+                        "\nErro ao processar linha %d: operador de atribuicao = so pode ser usado para atribuir variaveis\n",
+                        indiceDaLinha);
+                erroAoProcessarLinha = true;
+            }
+
+            if (!erroAoProcessarLinha) {
+                while (posicoesOperadorMultiplicacao.size() > 0) {
+                    int posicao = posicoesOperadorMultiplicacao.get(0);
+                    if (posicao + 1 >= linhaQuebrada.size() || posicao - 1 < 0) {
+                        System.out.printf("\nErro ao processar linha %d: expressao invalida\n", indiceDaLinha);
+                        erroAoProcessarLinha = true;
+                        posicoesOperadorMultiplicacao = new ArrayList<Integer>();
+                    } else {
+                        String v1 = linhaQuebrada.get(posicao - 1);
+                        String v2 = linhaQuebrada.get(posicao + 1);
+                        char c1 = v1.charAt(0);
+                        char c2 = v2.charAt(0);
+                        int valor1, valor2;
+                        if ((Character.isLetter(c1) && Character.isLowerCase(c1))) {
+                            valor1 = variaveis[(int) c1 - 97];
+                        } else {
+                            valor1 = Integer.parseInt(v1);
+                        }
+                        if ((Character.isLetter(c2) && Character.isLowerCase(c2))) {
+                            valor2 = variaveis[(int) c2 - 97];
+                        } else {
+                            valor2 = Integer.parseInt(v2);
+                        }
+                        int result = valor1 * valor2;
+                        linhaQuebrada.set(posicao, String.valueOf(result));
+                        linhaQuebrada.remove(posicao + 1);
+                        linhaQuebrada.remove(posicao - 1);
+
+                        linha = "";
+                        for (j = 0; j < linhaQuebrada.size(); j++) {
+                            linha = linha + "[" + linhaQuebrada.get(j) + "]";
+                        }
+                        linha = linha + "\n";
+                        System.out.printf("\nProcessando linha %d: %s", indiceDaLinha, linha);
+
+                        posicoesOperadorMultiplicacao = new ArrayList<Integer>();
+                        for (i = 0; i < linhaQuebrada.size(); i++) {
+                            String s = linhaQuebrada.get(i);
+                            if (s.equals("*")) {
+                                posicoesOperadorMultiplicacao.add(i);
+                            }
+                        }
+                    }
+                }
+                posicoesOperadorAdicao = new ArrayList<Integer>();
+                for (i = 0; i < linhaQuebrada.size(); i++) {
+                    String s = linhaQuebrada.get(i);
+                    if (s.equals("+")) {
+                        posicoesOperadorAdicao.add(i);
+                    }
+                }
+                while (posicoesOperadorAdicao.size() > 0) {
+                    int posicao = posicoesOperadorAdicao.get(0);
+                    if (posicao + 1 >= linhaQuebrada.size() || posicao - 1 < 0) {
+                        System.out.printf("\nErro ao processar linha %d: expressao invalida\n", indiceDaLinha);
+                        erroAoProcessarLinha = true;
+                        posicoesOperadorAdicao = new ArrayList<Integer>();
+                    } else {
+                        String v1 = linhaQuebrada.get(posicao - 1);
+                        String v2 = linhaQuebrada.get(posicao + 1);
+                        char c1 = v1.charAt(0);
+                        char c2 = v2.charAt(0);
+                        int valor1, valor2;
+                        if ((Character.isLetter(c1) && Character.isLowerCase(c1))) {
+                            valor1 = variaveis[(int) c1 - 97];
+                        } else {
+                            valor1 = Integer.parseInt(v1);
+                        }
+                        if ((Character.isLetter(c2) && Character.isLowerCase(c2))) {
+                            valor2 = variaveis[(int) c2 - 97];
+                        } else {
+                            valor2 = Integer.parseInt(v2);
+                        }
+                        int result = valor1 + valor2;
+                        linhaQuebrada.set(posicao, String.valueOf(result));
+                        linhaQuebrada.remove(posicao + 1);
+                        linhaQuebrada.remove(posicao - 1);
+
+                        linha = "";
+                        for (j = 0; j < linhaQuebrada.size(); j++) {
+                            linha = linha + "[" + linhaQuebrada.get(j) + "]";
+                        }
+                        linha = linha + "\n";
+                        System.out.printf("\nProcessando linha %d: %s", indiceDaLinha, linha);
+
+                        posicoesOperadorAdicao = new ArrayList<Integer>();
+                        for (i = 0; i < linhaQuebrada.size(); i++) {
+                            String s = linhaQuebrada.get(i);
+                            if (s.equals("+")) {
+                                posicoesOperadorAdicao.add(i);
+                            }
+                        }
+                    }
                 }
 
-            }
-        }
-        int variavel;
-        int i = 0;
-        int result = 0;
-        for (i = 0; i < linhaQuebrada.size(); i++) {
-            char c = linhaQuebrada.get(i).charAt(0);
-            int aux1 = 0;
-            int aux2 = 0;
-            if (c == '*') {
-                String a = linhaQuebrada.get(i - 1);
-                String b = linhaQuebrada.get(i + 1);
-                if (Character.isLetter(a.charAt(0)) && Character.isLowerCase(a.charAt(0))) {
-                    aux1 = variaveis[(int) a.charAt(0) - 97];
-                } else {
-                    aux1 = Integer.parseInt(a);
+                if (!erroAoProcessarLinha) {
+                    if (ehAtribuicao) {
+                        variaveis[(int) linhaQuebrada.get(0).charAt(0) - 97] = Integer.parseInt(linhaQuebrada.get(2));
+                    } else {
+                        char c = linhaQuebrada.get(0).charAt(0);
+                        if ((Character.isLetter(c) && Character.isLowerCase(c))) {
+                            System.out.printf("\nSaida do processamento da linha %d: %d\n", indiceDaLinha,
+                                    variaveis[(int) linhaQuebrada.get(0).charAt(0) - 97]);
+                        } else {
+                            System.out.printf("\nSaida do processamento da linha %d: %s\n", indiceDaLinha,
+                                    linhaQuebrada.get(0));
+                        }
+                    }
                 }
-                if (Character.isLetter(b.charAt(0)) && Character.isLowerCase(b.charAt(0))) {
-                    aux2 = variaveis[(int) b.charAt(0) - 97];
-                } else {
-                    aux2 = Integer.parseInt(a);
-                }
-                result = aux1 * aux2;
-                aux1 = aux1 * aux2;
-            }
-            if (c == '+') {
-                
-            }
-            if (c == '=') {
-
             }
         }
     }
 
     public static void main(String[] args) {
         Calculadora calculadora = new Calculadora();
-        System.out.printf("Calculadora:\n\n");
-
+        System.out.printf("\n\n-----------------CALCULADORA-----------------:\n");
         BufferedReader reader;
         int indiceDaLinha = 1;
         try {
@@ -193,6 +298,7 @@ public class Calculadora {
                 indiceDaLinha++;
             }
             reader.close();
+            System.out.printf("\n\n--------------------------------------------:\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
